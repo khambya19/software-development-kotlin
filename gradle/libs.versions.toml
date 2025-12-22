@@ -18,6 +18,9 @@ materialIconsExtended = "1.7.8"
 # Firebase
 firebaseBom = "34.7.0"
 
+# Cloudinary
+cloudinary = "2.3.1"
+
 # Plugins
 googleServices = "4.4.2"
 
@@ -55,6 +58,9 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage" }
+
+# Cloudinary
+cloudinary-android = { group = "com.cloudinary", name = "cloudinary-android", version.ref = "cloudinary" }
 
 
 [plugins]

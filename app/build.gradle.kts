@@ -43,7 +43,14 @@ android {
 dependencies {
 
     // --- Image Loading (Coil) ---
-    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
+    
+    // --- OkHttp for Coil ---
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // --- Cloudinary SDK ---
+    implementation("com.cloudinary:cloudinary-android:2.1.0")
 
     // --- SplashScreen Dependency ---
     implementation("androidx.core:core-splashscreen:1.0.1")
@@ -52,7 +59,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database)
-    implementation(libs.firebase.storage) // NOW RESOLVED
+    implementation(libs.firebase.storage)
+    implementation("androidx.compose.runtime:runtime-livedata:1.10.0")
 
     // --- Android & Compose Dependencies ---
     implementation(libs.androidx.core.ktx)

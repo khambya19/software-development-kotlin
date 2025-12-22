@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".viewmodel.InternNepalApp"
@@ -10,7 +15,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.InternNepal">
+        android:theme="@style/Theme.InternNepal"
+        tools:replace="android:fullBackupContent">
 
         <!-- Launcher Activity with Splash Theme -->
         <activity
@@ -31,13 +37,19 @@
             android:theme="@style/Theme.InternNepal" />
 
         <activity
+            android:name=".view.admin.AdminRegisterActivity"
+            android:exported="false"
+            android:label="Admin Registration"
+            android:theme="@style/Theme.InternNepal" />
+
+        <activity
             android:name=".view.ForgotPasswordActivity"
             android:exported="false"
             android:label="Forgot Password"
             android:theme="@style/Theme.InternNepal" />
 
         <activity
-            android:name=".view.DashboardActivity"
+            android:name=".view.user.UserDashboardActivity"
             android:exported="false"
             android:label="Dashboard"
             android:theme="@style/Theme.InternNepal" />
