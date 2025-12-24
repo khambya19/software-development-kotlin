@@ -6,5 +6,6 @@ data class UserModel(
     val email: String = "",
     val password: String = "",
     val phoneNumber: String = "",
-    val role: String = "user" // "user" for jobseekers, "admin" for the admin
+    val role: String = "user", // "user" for jobseekers, "admin" for the admin
+    val profileImageUrl: String = "" // URL to profile picture
 )

@@ -10,5 +10,6 @@ data class JobModel(
     val description: String = "",
     val category: String = "",
     val imageUrl: String = "",
-    val postedDate: Long = System.currentTimeMillis()
+    val postedDate: Long = System.currentTimeMillis(),
+    val adminId: String = "" // Admin who posted this job
 )

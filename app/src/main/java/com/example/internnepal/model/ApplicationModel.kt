@@ -8,6 +8,8 @@ data class ApplicationModel(
     val fullName: String = "",
     val email: String = "",
     val phoneNumber: String = "",
+    val message: String = "",
     val appliedDate: Long = System.currentTimeMillis(),
-    val status: String = "Pending"
+    val status: String = "Pending",
+    val adminMessage: String = ""
 )
