@@ -22,4 +22,19 @@ interface UserRepo {
     fun logout(
         callback: (Boolean, String) -> Unit
     )
+    
+    fun resetPassword(
+        email: String,
+        callback: (Boolean, String) -> Unit
+    )
+    
+    fun updateUser(
+        user: UserModel,
+        callback: (Boolean, String) -> Unit
+    )
+    
+    fun checkEmailExists(
+        email: String,
+        callback: (Boolean) -> Unit
+    )
 }
