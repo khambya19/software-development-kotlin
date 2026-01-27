@@ -30,15 +30,23 @@ import androidx.compose.ui.unit.sp
 import com.example.internnepal.ui.theme.pink
 import com.example.internnepal.ui.theme.purple
 import com.example.internnepal.ui.theme.white
-import com.google.firebase.auth.FirebaseAuth
+import com.example.internnepal.Repository.UserRepoImpl
+import com.example.internnepal.viewmodel.UserViewModel
 
 class ForgotPasswordActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        // MVVM: Create ViewModel properly
+        val userViewModel = UserViewModel(UserRepoImpl())
+        
         setContent {
             MaterialTheme {
-                ForgotPasswordBody(onBackClick = { finish() })
+                ForgotPasswordBody(
+                    userViewModel = userViewModel,
+                    onBackClick = { finish() }
+                )
             }
         }
     }
@@ -46,11 +54,13 @@ class ForgotPasswordActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ForgotPasswordBody(onBackClick: () -> Unit) {
+fun ForgotPasswordBody(
+    userViewModel: UserViewModel,
+    onBackClick: () -> Unit
+) {
     var email by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) } 
+    val isLoading by userViewModel.loading // MVVM: Observe ViewModel state
     val context = LocalContext.current
-    val auth = FirebaseAuth.getInstance()
 
     Scaffold(
         topBar = {
@@ -120,28 +130,15 @@ fun ForgotPasswordBody(onBackClick: () -> Unit) {
             Button(
                 onClick = {
                     if (email.isNotEmpty()) {
-                        isLoading = true
-                        auth.sendPasswordResetEmail(email)
-                            .addOnCompleteListener { task ->
-                                isLoading = false
-                                if (task.isSuccessful) {
-                                    Toast.makeText(
-                                        context,
-                                        "Reset link sent to your email",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                    onBackClick()
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Error: ${task.exception?.message}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
+                        // MVVM: Call ViewModel instead of Firebase directly
+                        userViewModel.resetPassword(email) { success, message ->
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                            if (success) {
+                                onBackClick()
                             }
+                        }
                     } else {
-                        Toast.makeText(context, "Please enter your email", Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(context, "Please enter your email", Toast.LENGTH_SHORT).show()
                     }
                 },
                 enabled = !isLoading,
@@ -173,6 +170,9 @@ fun ForgotPasswordBody(onBackClick: () -> Unit) {
 @Composable
 fun ForgotPasswordPreview() {
     MaterialTheme {
-        ForgotPasswordBody(onBackClick = {})
+        ForgotPasswordBody(
+            userViewModel = UserViewModel(UserRepoImpl()),
+            onBackClick = {}
+        )
     }
 }

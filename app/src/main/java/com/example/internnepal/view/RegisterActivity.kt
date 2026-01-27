@@ -39,12 +39,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.internnepal.R
 import com.example.internnepal.model.UserModel
+import com.example.internnepal.model.AdminModel
 import com.example.internnepal.Repository.UserRepoImpl
+import com.example.internnepal.Repository.AdminRepoImpl
 import com.example.internnepal.ui.theme.InternNepalTheme
 import com.example.internnepal.ui.theme.pink
 import com.example.internnepal.ui.theme.purple
 import com.example.internnepal.ui.theme.white
 import com.example.internnepal.viewmodel.UserViewModel
+import com.example.internnepal.viewmodel.AdminViewModel
 import com.google.firebase.FirebaseApp
 
 class RegisterActivity : ComponentActivity() {
@@ -57,23 +60,33 @@ class RegisterActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val userViewModel = UserViewModel(UserRepoImpl())
+        val adminViewModel = AdminViewModel(AdminRepoImpl())
+        val userRepoImpl = UserRepoImpl()
+        val adminRepoImpl = AdminRepoImpl()
 
         setContent {
             InternNepalTheme {
-                RegisterBody(userViewModel)
+                RegisterBody(userViewModel, adminViewModel, userRepoImpl, adminRepoImpl)
             }
         }
     }
 }
 
 @Composable
-fun RegisterBody(userViewModel: UserViewModel? = null) {
+fun RegisterBody(
+    userViewModel: UserViewModel? = null,
+    adminViewModel: AdminViewModel? = null,
+    userRepoImpl: UserRepoImpl? = null,
+    adminRepoImpl: AdminRepoImpl? = null
+) {
 
     var fullName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(false) }
+    var isRegistering by remember { mutableStateOf(false) }
+    var isAdmin by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val activity = context as? Activity
@@ -107,8 +120,46 @@ fun RegisterBody(userViewModel: UserViewModel? = null) {
                     .size(100.dp)
                     .padding(10.dp)
             )
+            
+            // User/Admin Toggle
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "User",
+                    fontSize = 16.sp,
+                    fontWeight = if (!isAdmin) FontWeight.Bold else FontWeight.Normal,
+                    color = if (!isAdmin) pink else Color.Gray
+                )
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Switch(
+                    checked = isAdmin,
+                    onCheckedChange = { isAdmin = it },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = white,
+                        checkedTrackColor = pink,
+                        uncheckedThumbColor = white,
+                        uncheckedTrackColor = Color.Gray
+                    )
+                )
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Text(
+                    "Admin",
+                    fontSize = 16.sp,
+                    fontWeight = if (isAdmin) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isAdmin) pink else Color.Gray
+                )
+            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             OutlinedTextField(
                 value = fullName,
@@ -151,7 +202,11 @@ fun RegisterBody(userViewModel: UserViewModel? = null) {
 
             OutlinedTextField(
                 value = phoneNumber,
-                onValueChange = { phoneNumber = it },
+                onValueChange = { 
+                    if (it.isEmpty() || it.all { char -> char.isDigit() }) {
+                        phoneNumber = it
+                    }
+                },
                 label = { Text("Phone Number") },
                 shape = RoundedCornerShape(15.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -200,23 +255,61 @@ fun RegisterBody(userViewModel: UserViewModel? = null) {
                 onClick = {
                     if (fullName.isBlank() || email.isBlank() || phoneNumber.isBlank() || password.isBlank()) {
                         Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                    } else if (isRegistering) {
+                        Toast.makeText(context, "Please wait...", Toast.LENGTH_SHORT).show()
                     } else {
-                        val user = UserModel(
-                            userId = System.currentTimeMillis().toString(),
-                            fullName = fullName,
-                            email = email,
-                            password = password,
-                            phoneNumber = phoneNumber
-                        )
-
-                        if (userViewModel != null) {
-                            userViewModel.register(user) { success, message ->
-                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                if (success) activity?.finish()
+                        isRegistering = true
+                        val trimmedEmail = email.trim()
+                        
+                        // First check if email exists in users database
+                        userRepoImpl?.checkEmailExists(trimmedEmail) { existsInUsers ->
+                            if (existsInUsers) {
+                                isRegistering = false
+                                Toast.makeText(context, "Email already registered", Toast.LENGTH_LONG).show()
+                            } else {
+                                // Then check if email exists in admins database
+                                adminRepoImpl?.checkEmailExists(trimmedEmail) { existsInAdmins ->
+                                    if (existsInAdmins) {
+                                        isRegistering = false
+                                        Toast.makeText(context, "Email already registered as admin", Toast.LENGTH_LONG).show()
+                                    } else {
+                                        // Email is unique, proceed with registration
+                                        if (isAdmin) {
+                                            // Register as Admin
+                                            val admin = AdminModel(
+                                                adminId = System.currentTimeMillis().toString(),
+                                                fullName = fullName,
+                                                email = trimmedEmail,
+                                                password = password,
+                                                phoneNumber = phoneNumber
+                                            )
+                                            adminViewModel?.register(admin) { success, message ->
+                                                isRegistering = false
+                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                                if (success) activity?.finish()
+                                            }
+                                        } else {
+                                            // Register as User
+                                            val user = UserModel(
+                                                userId = System.currentTimeMillis().toString(),
+                                                fullName = fullName,
+                                                email = trimmedEmail,
+                                                password = password,
+                                                phoneNumber = phoneNumber
+                                            )
+                                            userViewModel?.register(user) { success, message ->
+                                                isRegistering = false
+                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                                if (success) activity?.finish()
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 },
+                enabled = !isRegistering,
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 10.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = pink),
@@ -225,7 +318,11 @@ fun RegisterBody(userViewModel: UserViewModel? = null) {
                     .height(60.dp)
                     .padding(horizontal = 15.dp)
             ) {
-                Text("Register", color = Color.White, fontSize = 18.sp)
+                if (isRegistering) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                } else {
+                    Text(if (isAdmin) "Register as Admin" else "Register as User", color = Color.White, fontSize = 18.sp)
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -255,6 +352,6 @@ fun RegisterBody(userViewModel: UserViewModel? = null) {
 @Composable
 fun RegisterPreview() {
     InternNepalTheme {
-        RegisterBody(userViewModel = null)
+        RegisterBody(userViewModel = null, adminViewModel = null, userRepoImpl = null, adminRepoImpl = null)
     }
 }

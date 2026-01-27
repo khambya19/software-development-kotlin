@@ -42,13 +42,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.internnepal.R
-import com.example.internnepal.Repository.UserRepoImpl
 import com.example.internnepal.ui.theme.InternNepalTheme
+import com.example.internnepal.Repository.UserRepoImpl
+import com.example.internnepal.viewmodel.UserViewModel
 import com.example.internnepal.ui.theme.orange
 import com.example.internnepal.ui.theme.pink
 import com.example.internnepal.ui.theme.purple
 import com.example.internnepal.ui.theme.white
-import com.example.internnepal.viewmodel.UserViewModel
 
 fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
@@ -129,9 +129,7 @@ fun LoginBody(userViewModel: UserViewModel? = null) {
                 shape = RoundedCornerShape(15.dp),
                 placeholder = { Text("abc@gmail.com") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 15.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = orange,
                     unfocusedContainerColor = orange,
@@ -183,23 +181,24 @@ fun LoginBody(userViewModel: UserViewModel? = null) {
 
             Button(
                 onClick = {
-                    if (email.isBlank() || password.isBlank()) {
+                    val trimmedEmail = email.trim()
+                    val trimmedPassword = password.trim()
+                    
+                    if (trimmedEmail.isBlank() || trimmedPassword.isBlank()) {
                         Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                     } else {
-                        if (userViewModel != null) {
-                            userViewModel.login(email, password) { success, message, role ->
-                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                if (success) {
-                                    val targetActivity = if (role == "admin") {
-                                        AdminDashboardActivity::class.java
-                                    } else {
-                                        DashboardActivity::class.java
-                                    }
-                                    val intent = Intent(context, targetActivity)
-                                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                    context.startActivity(intent)
-                                    activity?.finish()
+                        userViewModel?.login(trimmedEmail, trimmedPassword) { success, message, role ->
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            if (success) {
+                                val targetActivity = if (role == "admin") {
+                                    AdminDashboardActivity::class.java
+                                } else {
+                                    com.example.internnepal.view.user.UserDashboardActivity::class.java
                                 }
+                                val intent = Intent(context, targetActivity)
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                context.startActivity(intent)
+                                activity?.finish()
                             }
                         }
                     }
