@@ -39,9 +39,7 @@ fun AdminJobsList(jobViewModel: JobViewModel) {
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedJob by remember { mutableStateOf<JobModel?>(null) }
 
-    LaunchedEffect(Unit) {
-        jobViewModel.fetchAllJobs()
-    }
+    // No need to fetch jobs here - they're already filtered by admin in AdminMainScreen
 
     val filterCategories = listOf("All") + JOB_CATEGORIES
 

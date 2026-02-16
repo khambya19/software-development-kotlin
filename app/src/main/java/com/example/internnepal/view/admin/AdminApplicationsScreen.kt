@@ -42,15 +42,24 @@ fun ViewApplicationsScreen(jobViewModel: JobViewModel) {
     val isLoading by jobViewModel.loading
     var selectedJob by remember { mutableStateOf<JobModel?>(null) }
 
+    // Fetch applications only (jobs are already filtered by admin in AdminMainScreen)
     LaunchedEffect(Unit) {
-        jobViewModel.fetchAllJobs()
         jobViewModel.fetchAllApplications()
     }
     
-    // Calculate application counts per job
-    val jobApplicationCounts = remember(jobs, applications) {
+    // Filter applications to only show those for THIS admin's jobs
+    val adminJobIds = remember(jobs) {
+        jobs.map { it.jobId }.toSet()
+    }
+    
+    val filteredApplications = remember(applications, adminJobIds) {
+        applications.filter { it.jobId in adminJobIds }
+    }
+    
+    // Calculate application counts per job (using filtered applications)
+    val jobApplicationCounts = remember(jobs, filteredApplications) {
         jobs.map { job ->
-            job to applications.count { it.jobId == job.jobId }
+            job to filteredApplications.count { it.jobId == job.jobId }
         }
     }
 
@@ -171,7 +180,7 @@ fun ApplicantsForJobScreen(job: JobModel, jobViewModel: JobViewModel, onBack: ()
     val allApplications by jobViewModel.applications
     val context = LocalContext.current
     
-    // Filter applications for this specific job
+    // Filter applications for this specific job only
     val jobApplications = remember(allApplications, job.jobId) {
         allApplications.filter { it.jobId == job.jobId }
     }
